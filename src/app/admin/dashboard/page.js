@@ -4,13 +4,22 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
+const colors = {
+  bg: '#1A1410',
+  card: '#2A2018',
+  border: '#3A2E22',
+  orange: '#FF6B35',
+  gold: '#FFC857',
+  cream: '#FFFBF5',
+  muted: '#B8AFA3',
+}
+
 export default function DashboardPage() {
   const [restaurant, setRestaurant] = useState(null)
   const [menuItems, setMenuItems] = useState([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  // Form state
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
@@ -24,7 +33,6 @@ export default function DashboardPage() {
 
   async function checkUserAndLoad() {
     const { data: { user } } = await supabase.auth.getUser()
-
     if (!user) {
       router.push('/admin/login')
       return
@@ -44,10 +52,8 @@ export default function DashboardPage() {
         .select('*')
         .eq('restaurant_id', rest.id)
         .order('category')
-
       setMenuItems(items || [])
     }
-
     setLoading(false)
   }
 
@@ -60,7 +66,6 @@ export default function DashboardPage() {
     setUploading(true)
     let imageUrl = null
 
-    // Görsel varsa önce onu yükle
     if (imageFile) {
       const fileExt = imageFile.name.split('.').pop()
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
@@ -75,10 +80,7 @@ export default function DashboardPage() {
         return
       }
 
-      const { data: urlData } = supabase.storage
-        .from('menu-images')
-        .getPublicUrl(fileName)
-
+      const { data: urlData } = supabase.storage.from('menu-images').getPublicUrl(fileName)
       imageUrl = urlData.publicUrl
     }
 
@@ -111,7 +113,6 @@ export default function DashboardPage() {
 
   async function handleDeleteItem(id) {
     if (!confirm('Bu ürünü silmek istediğine emin misin?')) return
-
     await supabase.from('menus').delete().eq('id', id)
     setMenuItems(menuItems.filter((item) => item.id !== id))
   }
@@ -119,9 +120,7 @@ export default function DashboardPage() {
   async function handleToggleAvailable(id, current) {
     await supabase.from('menus').update({ is_available: !current }).eq('id', id)
     setMenuItems(
-      menuItems.map((item) =>
-        item.id === id ? { ...item, is_available: !current } : item
-      )
+      menuItems.map((item) => (item.id === id ? { ...item, is_available: !current } : item))
     )
   }
 
@@ -130,119 +129,231 @@ export default function DashboardPage() {
     router.push('/admin/login')
   }
 
-  if (loading) return <div className="p-8">Yükleniyor...</div>
+  const inputStyle = {
+    background: '#1A1410',
+    border: `1px solid ${colors.border}`,
+    borderRadius: 10,
+    padding: '11px 14px',
+    fontSize: 14,
+    color: colors.cream,
+    outline: 'none',
+    fontFamily: "'Outfit', sans-serif",
+    width: '100%',
+    boxSizing: 'border-box',
+  }
+
+  if (loading)
+    return (
+      <div style={{ background: colors.bg, minHeight: '100vh', color: colors.cream, padding: 40 }}>
+        Yükleniyor...
+      </div>
+    )
 
   if (!restaurant) {
     return (
-      <div className="p-8">
+      <div style={{ background: colors.bg, minHeight: '100vh', color: colors.cream, padding: 40 }}>
         <p>Bu kullanıcıya bağlı bir restoran bulunamadı.</p>
-        <button onClick={handleLogout} className="mt-4 text-orange-500">
-          Çıkış Yap
+        <button onClick={handleLogout} style={{ marginTop: 16, color: colors.orange, background: 'none', border: 'none', cursor: 'pointer' }}>
+          Çıkış yap
         </button>
       </div>
     )
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-800">{restaurant.name} - Panel</h1>
-          <button
-            onClick={handleLogout}
-            className="text-sm text-red-500 hover:underline"
+    <>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+      />
+      <main style={{ minHeight: '100vh', background: colors.bg, fontFamily: "'Outfit', sans-serif" }}>
+        {/* Header */}
+        <div style={{ borderBottom: `3px solid ${colors.orange}`, background: colors.card }}>
+          <div
+            style={{
+              maxWidth: 720,
+              margin: '0 auto',
+              padding: '20px 20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
           >
-            Çıkış Yap
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-8">
-        {/* Yeni Ürün Ekle Formu */}
-        <section className="bg-white rounded-xl shadow-sm p-5">
-          <h2 className="font-semibold text-gray-800 mb-4">Yeni Ürün Ekle</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <input
-              type="text"
-              placeholder="Ürün Adı"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Kategori (örn: Burgerler)"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              type="number"
-              placeholder="Fiyat"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Açıklama"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm md:col-span-2"
-            />
+            <h1
+              style={{
+                fontFamily: "'Archivo Black', sans-serif",
+                fontSize: 20,
+                color: colors.cream,
+                margin: 0,
+              }}
+            >
+              {restaurant.name} <span style={{ color: colors.gold }}>· panel</span>
+            </h1>
+            <button
+              onClick={handleLogout}
+              style={{
+                background: 'none',
+                border: `1px solid ${colors.border}`,
+                color: colors.muted,
+                fontSize: 13,
+                padding: '8px 14px',
+                borderRadius: 8,
+                cursor: 'pointer',
+              }}
+            >
+              Çıkış yap
+            </button>
           </div>
-          <button
-            onClick={handleAddItem}
-            disabled={uploading}
-            className="mt-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2 rounded-lg text-sm disabled:opacity-50"
-          >
-            {uploading ? 'Yükleniyor...' : 'Ekle'}
-          </button>
-        </section>
+        </div>
 
-        {/* Mevcut Ürünler */}
-        <section>
-          <h2 className="font-semibold text-gray-800 mb-4">Menü Ürünleri ({menuItems.length})</h2>
-          <div className="space-y-3">
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '28px 20px 60px' }}>
+          {/* Yeni Ürün Formu */}
+          <section
+            style={{
+              background: colors.card,
+              borderRadius: 16,
+              padding: 22,
+              marginBottom: 32,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: "'Archivo Black', sans-serif",
+                fontSize: 15,
+                color: colors.orange,
+                margin: '0 0 16px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.03em',
+              }}
+            >
+              Yeni ürün ekle
+            </h2>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Ürün adı"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                type="text"
+                placeholder="Kategori (örn: Burgerler)"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                type="number"
+                placeholder="Fiyat"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                type="text"
+                placeholder="Açıklama"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setImageFile(e.target.files[0])}
+                style={{ ...inputStyle, gridColumn: '1 / -1', color: colors.muted }}
+              />
+            </div>
+            <button
+              onClick={handleAddItem}
+              disabled={uploading}
+              style={{
+                marginTop: 16,
+                background: colors.orange,
+                color: '#1A1410',
+                fontWeight: 700,
+                fontSize: 14,
+                padding: '11px 22px',
+                borderRadius: 10,
+                border: 'none',
+                cursor: 'pointer',
+                opacity: uploading ? 0.6 : 1,
+              }}
+            >
+              {uploading ? 'Yükleniyor...' : 'Ekle'}
+            </button>
+          </section>
+
+          {/* Ürün Listesi */}
+          <h2
+            style={{
+              fontFamily: "'Archivo Black', sans-serif",
+              fontSize: 15,
+              color: colors.gold,
+              margin: '0 0 16px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.03em',
+            }}
+          >
+            Menü ürünleri ({menuItems.length})
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {menuItems.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-xl shadow-sm p-4 flex justify-between items-center"
+                style={{
+                  background: colors.card,
+                  borderRadius: 12,
+                  padding: 14,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  border: `1px solid ${colors.border}`,
+                  gap: 12,
+                }}
               >
-                <div className="flex items-center gap-3">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                   {item.image_url && (
                     <img
                       src={item.image_url}
                       alt={item.title}
-                      className="w-12 h-12 rounded-lg object-cover"
+                      style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                     />
                   )}
-                  <div>
-                    <p className="font-semibold text-gray-800">{item.title}</p>
-                    <p className="text-sm text-gray-500">{item.category} · {item.price} ₺</p>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontWeight: 600, color: colors.cream, margin: '0 0 2px', fontSize: 14 }}>
+                      {item.title}
+                    </p>
+                    <p style={{ fontSize: 13, color: colors.muted, margin: 0 }}>
+                      {item.category} · {item.price} ₺
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                   <button
                     onClick={() => handleToggleAvailable(item.id, item.is_available)}
-                    className={`text-xs px-3 py-1 rounded-full ${
-                      item.is_available
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 text-gray-400'
-                    }`}
+                    style={{
+                      fontSize: 12,
+                      padding: '5px 12px',
+                      borderRadius: 20,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: item.is_available ? 'rgba(99,153,34,0.2)' : 'rgba(184,175,163,0.15)',
+                      color: item.is_available ? '#97C459' : colors.muted,
+                    }}
                   >
                     {item.is_available ? 'Aktif' : 'Pasif'}
                   </button>
                   <button
                     onClick={() => handleDeleteItem(item.id)}
-                    className="text-red-400 hover:text-red-600 text-sm"
+                    style={{ color: '#E24B4A', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}
                   >
                     Sil
                   </button>
@@ -250,8 +361,8 @@ export default function DashboardPage() {
               </div>
             ))}
           </div>
-        </section>
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   )
 }
