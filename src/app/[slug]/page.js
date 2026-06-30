@@ -25,6 +25,8 @@ export default async function MenuPage({ params }) {
     return acc
   }, {})
 
+  const categoryList = Object.keys(grouped)
+
   return (
     <>
       <link
@@ -34,114 +36,171 @@ export default async function MenuPage({ params }) {
       <main
         style={{
           minHeight: '100vh',
-          background: '#1A1410',
+          background: '#15110D',
           fontFamily: "'Outfit', sans-serif",
           color: '#FFFBF5',
         }}
       >
-        {/* Header */}
+        {/* Hero header */}
         <div
           style={{
-            background: 'linear-gradient(180deg, #2A2018 0%, #1A1410 100%)',
-            borderBottom: '3px solid #FF6B35',
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
+            background: 'radial-gradient(120% 100% at 50% 0%, #2E2117 0%, #15110D 70%)',
+            padding: '36px 20px 28px',
+            textAlign: 'center',
+            borderBottom: '1px solid #2E241A',
           }}
         >
-          <div style={{ maxWidth: 640, margin: '0 auto', padding: '28px 20px 22px' }}>
-            <p
-              style={{
-                color: '#FFC857',
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                margin: '0 0 4px',
-              }}
-            >
-              Menü
-            </p>
-            <h1
-              style={{
-                fontFamily: "'Archivo Black', sans-serif",
-                fontSize: 32,
-                lineHeight: 1.1,
-                margin: 0,
-                color: '#FFFBF5',
-              }}
-            >
-              {restaurant.name}
-            </h1>
-          </div>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            style={{
+              width: 76,
+              height: 76,
+              borderRadius: '50%',
+              margin: '0 auto 14px',
+              display: 'block',
+              boxShadow: '0 0 0 3px #FF6B35',
+            }}
+          />
+          <p
+            style={{
+              color: '#FFC857',
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              margin: '0 0 6px',
+            }}
+          >
+            Lezzetin en çıtır hali
+          </p>
+          <h1
+            style={{
+              fontFamily: "'Archivo Black', sans-serif",
+              fontSize: 'clamp(26px, 7vw, 34px)',
+              lineHeight: 1.1,
+              margin: 0,
+            }}
+          >
+            {restaurant.name}
+          </h1>
         </div>
 
-        {/* Menü */}
-        <div style={{ maxWidth: 640, margin: '0 auto', padding: '32px 20px 60px' }}>
-          {Object.entries(grouped).map(([category, items]) => (
-            <section key={category} style={{ marginBottom: 40 }}>
+        {/* Sticky category nav */}
+        {categoryList.length > 1 && (
+          <div
+            style={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 20,
+              background: 'rgba(21,17,13,0.95)',
+              backdropFilter: 'blur(8px)',
+              borderBottom: '1px solid #2E241A',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                padding: '12px 16px',
+                width: 'max-content',
+              }}
+            >
+              {categoryList.map((cat) => (
+                <a
+                  key={cat}
+                  href={`#${encodeURIComponent(cat)}`}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#FFC857',
+                    background: '#2A2018',
+                    border: '1px solid #3A2E22',
+                    borderRadius: 20,
+                    padding: '8px 16px',
+                    whiteSpace: 'nowrap',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {cat}
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Menü içerik */}
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: '28px 16px 60px' }}>
+          {categoryList.map((category) => (
+            <section key={category} id={encodeURIComponent(category)} style={{ marginBottom: 36, scrollMarginTop: 64 }}>
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  marginBottom: 18,
+                  marginBottom: 14,
                 }}
               >
                 <h2
                   style={{
                     fontFamily: "'Archivo Black', sans-serif",
-                    fontSize: 18,
+                    fontSize: 17,
                     color: '#FF6B35',
                     margin: 0,
                     textTransform: 'uppercase',
-                    letterSpacing: '0.03em',
+                    letterSpacing: '0.02em',
                   }}
                 >
                   {category}
                 </h2>
-                <div
-                  style={{
-                    flex: 1,
-                    height: 2,
-                    background:
-                      'repeating-linear-gradient(90deg, #FFC857 0, #FFC857 6px, transparent 6px, transparent 12px)',
-                  }}
-                />
+                <div style={{ flex: 1, height: 1, background: '#2E241A' }} />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {items.map((item) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {grouped[category].map((item) => (
                   <div
                     key={item.id}
                     style={{
-                      background: '#2A2018',
-                      borderRadius: 14,
-                      padding: 16,
+                      background: '#1F1810',
+                      borderRadius: 16,
+                      padding: 14,
                       display: 'flex',
-                      gap: 14,
-                      border: '1px solid #3A2E22',
+                      gap: 12,
+                      border: '1px solid #2E241A',
+                      alignItems: 'center',
                     }}
                   >
-                    {item.image_url && (
+                    {item.image_url ? (
                       <img
                         src={item.image_url}
                         alt={item.title}
                         style={{
-                          width: 76,
-                          height: 76,
-                          borderRadius: 10,
+                          width: 64,
+                          height: 64,
+                          borderRadius: 12,
                           objectFit: 'cover',
                           flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 12,
+                          flexShrink: 0,
+                          background: '#2A2018',
                         }}
                       />
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <h3
                         style={{
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: 600,
-                          margin: '0 0 4px',
+                          margin: '0 0 3px',
                           color: '#FFFBF5',
                         }}
                       >
@@ -150,9 +209,9 @@ export default async function MenuPage({ params }) {
                       {item.description && (
                         <p
                           style={{
-                            fontSize: 13,
-                            color: '#B8AFA3',
-                            margin: '0 0 8px',
+                            fontSize: 12.5,
+                            color: '#9C9085',
+                            margin: '0 0 6px',
                             lineHeight: 1.4,
                           }}
                         >
@@ -161,7 +220,7 @@ export default async function MenuPage({ params }) {
                       )}
                       <p
                         style={{
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: 700,
                           color: '#FFC857',
                           margin: 0,
@@ -175,6 +234,12 @@ export default async function MenuPage({ params }) {
               </div>
             </section>
           ))}
+
+          {categoryList.length === 0 && (
+            <p style={{ textAlign: 'center', color: '#9C9085', marginTop: 60 }}>
+              Henüz menüde ürün yok.
+            </p>
+          )}
         </div>
       </main>
     </>
